@@ -1,0 +1,217 @@
+sprite_sheet "rabbit" 512 x 512 margin 1
+
+dig "dig.xcf.bz2"
+dust "dust.xcf.bz2"
+dust_end "dust-end.xcf.bz2"
+eat "eat.xcf.bz2"
+fall "fall.xcf.bz2"
+idle "idle.xcf.bz2"
+injured "injured.xcf.bz2"
+jump "jump.xcf.bz2"
+walk "walk.xcf.bz2"
+
+/*----------------------------------------------------------------------------*/
+/* idle */
+"idle" image_size * 0.5 with idle
+  glob "*"
+  exclude "palette"
+;
+
+/*----------------------------------------------------------------------------*/
+/* walk */
+"walk 1" image_size * 0.5 with walk
+  "head 1"
+  "right leg 1"
+  "right arm 1"
+  "ear 1"
+  "body 1"
+;
+
+"walk 2" image_size * 0.5 with walk
+  "head 1"
+  "right leg 3"
+  "right arm 3"
+  "ear 3"
+  "body 3"
+;
+
+"walk 3" image_size * 0.5 with walk
+  "head 1"
+  "right leg 4"
+  "right arm 4"
+  "ear 4"
+  "body 4"
+;
+
+/*----------------------------------------------------------------------------*/
+/* dig */
+"dig 1" image_size * 0.5 with dig
+  "body 1"
+;
+
+"dig 2" image_size * 0.5 with dig
+  "body 2"
+;
+
+"dig 3" image_size * 0.5 with dig
+  "body 3"
+;
+
+"dig 4" image_size * 0.5 with dig
+  "body 4"
+;
+
+"dig 5" image_size * 0.5 with dig
+  "body 5"
+  "foot 5-1"
+;
+
+"dig 6" image_size * 0.5 with dig
+  "body 5"
+  "foot 5-2"
+;
+
+/*----------------------------------------------------------------------------*/
+/* dust */
+"dust 1" image_size * 0.5 with dust
+  "dust 1"
+;
+
+"dust 2" image_size * 0.5 with dust
+  "dust 2"
+;
+
+"dust 3" image_size * 0.5 with dust
+  "dust 3"
+;
+
+"dust 4" image_size * 0.5 with dust
+  "dust 4"
+;
+
+/*----------------------------------------------------------------------------*/
+/* dust end */
+"dust end 1" image_size * 0.5 with dust_end
+  "dust end 1"
+;
+
+"dust end 2" image_size * 0.5 with dust_end
+  "dust end 2"
+;
+
+"dust end 3" image_size * 0.5 with dust_end
+  "dust end 3"
+;
+
+"dust end 4" image_size * 0.5 with dust_end
+  "dust end 4"
+;
+
+/*----------------------------------------------------------------------------*/
+/* jump */
+"jump 1" image_size * 0.5 with jump
+  "body 1"
+;
+
+"jump 2" image_size * 0.5 with jump
+  "body 2"
+;
+
+"jump 3" image_size * 0.5 with jump
+  "body 3"
+;
+
+"jump 4" image_size * 0.5 with jump
+  "body 4"
+;
+
+/*----------------------------------------------------------------------------*/
+/* fall */
+"fall" image_size * 0.5 with fall
+  glob "*"
+  exclude "palette"
+;
+
+/*----------------------------------------------------------------------------*/
+/* injured */
+"injured" image_size * 0.5 with injured
+  glob "*"
+  exclude "palette"
+;
+
+/*----------------------------------------------------------------------------*/
+/* eat */
+"eat 1" image_size * 0.5 with eat
+  "body"
+  "head"
+  "carrot 1"
+  "right arm 1"
+;
+
+"eat 2" image_size * 0.5 with eat
+  "body"
+  "head"
+  "carrot 2"
+  "right arm 2"
+;
+
+"eat 3" image_size * 0.5 with eat
+  "body"
+  "head"
+  "carrot 3"
+  "right arm 3"
+;
+
+"eat 4" image_size * 0.5 with eat
+  "body"
+  "head"
+  "carrot 4"
+  "right arm 4"
+;
+
+"eat 5" image_size * 0.5 with eat
+  "body"
+  "head"
+  "carrot 5"
+  "right arm 4"
+;
+
+"eat 6" image_size * 0.5 with eat
+  "body"
+  "head"
+  "carrot 6"
+  "right arm 3"
+;
+
+"eat 7" image_size * 0.5 with eat
+  "body"
+  "head 2"
+  "carrot 7"
+  "right arm 2"
+;
+
+"eat 8" image_size * 0.5 with eat
+  "body"
+  "head 2"
+  "carrot 8"
+  "right arm 1"
+;
+
+"eat 9" image_size * 0.5 with eat
+  "body"
+  "head 2"
+  "carrot 9"
+  "right arm 1"
+;
+
+"eat 10" image_size * 0.5 with eat
+  "body"
+  "head 3"
+  "right arm 1"
+;
+
+"eat 11" image_size * 0.5 with eat
+  "body big belly"
+  "head"
+  "right arm 1"
+;
