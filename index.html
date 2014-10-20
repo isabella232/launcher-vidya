@@ -12,20 +12,32 @@
     <script type="text/javascript">
 
     window.onload = function() {
-        var CanvasHeight = 600;
-        var CanvasWidth = 800;
+        var CanvasHeight = 800;
+        var CanvasWidth = 600;
 
         var game = new Phaser.Game(CanvasWidth, CanvasHeight, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
         
         // Game Variables
-        var RabbitMovementSpeed = 40;
+        var RabbitMovementSpeed = 100;
         var WorldGravity = 20;
-        var LaunchSpeed = 500;
+        var WorldGravityNerf = 20;
+        
+        var LaunchSpeed = 400;
         var GameStarted = false;
         var BackgroundColor = 0x87ceeb;
-        var WorldHeight = 8192 + 600;
+        var WorldHeight = 8192 + CanvasHeight;
+        var FairyBoost = 20;
         
-        var ground, player, fairy, keys;
+        var GlitterDuration = 15 * 1000; // milisegundos
+        var CurrentGlitterDuration = GlitterDuration;
+        var NoGlitter = false;
+        var GlitterBoost = 2 * 1000; // milisec
+        
+        var FirstFairy = 7492;
+        var FairySummonEach = 800;
+        
+        // Game Objects
+        var ground, player, fairyGroup, keys;
 
         var guiObjs = {};
 
@@ -35,6 +47,8 @@
             game.load.spritesheet('butterflies', 'assets/butterflies.png', 32, 32);
             game.load.image('platform', 'assets/platform.png');
             game.load.image('heightBar', 'assets/progress_marker.png');
+            game.load.image("glitterBar", 'assets/glitter_bar_border.png');
+            game.load.image("glitterFill", 'assets/glitter_bar_fill.png');
         }
 
         function create (){
@@ -54,36 +68,52 @@
             ground.body.immovable = true;
         
             /* Player */
-            player = game.add.sprite(game.world.centerX, game.world.height - 120, 'rabbit');
+            player = game.add.sprite(game.world.centerX, game.world.height - 32, 'rabbit');
             player.scale.setTo(0.5, 0.5);
-            player.anchor.setTo(.5, 1);
+            player.anchor.setTo(.5, 0.5);
             game.physics.arcade.enable(player);
             player.body.gravity.y = WorldGravity;
             player.body.collideWorldBounds = true;
             
             player.animations.add('walk', [1, 2, 3], 12, true);
-            player.animations.add('jump', [4, 5, 6, 7], 16, true);
+            player.animations.add('jump', [4, 5, 6, 7], 16, false);
             
-            game.camera.follow(player);
+            /* Fairies Group */
+            fairyGroup = game.add.group();
+            fairyGroup.enableBody = true;
             
-            /* Fairies */
-            fairies_group = game.add.group();
-            fairy = Launcher.CreateFairy(game);
+            /* Summon Fairies */
+            Launcher.CreateFairy(game, player, fairyGroup);
+            for(var altura = WorldHeight - FairySummonEach; altura > 0; altura -= FairySummonEach){
+                Launcher.CreateFairy(game, altura, fairyGroup);
+            }
             
             /* GUI */
             var gui = game.add.group();
-            var heightBar = game.add.sprite(0, 0, 'heightBar');
-            var heightIndicator = game.add.sprite(0, 0, "rabbit");
+            
+            // height GUI
+            var heightBar = gui.create(0, 0, 'heightBar');
+            var heightIndicator = gui.create(0, 0, "rabbit");
             heightBar.anchor.setTo(0.5, 0);
             heightIndicator.anchor.setTo(0.5);
             heightIndicator.scale.setTo(0.25);
-            gui.add(heightBar);
-            gui.add(heightIndicator);
             heightIndicator.fixedToCamera = heightBar.fixedToCamera = true;
-            heightBar.cameraOffset.setTo(32, 25);
-            heightIndicator.cameraOffset.setTo(32, 525);
+            heightBar.cameraOffset.setTo(32, 50);
+            heightIndicator.cameraOffset.setTo(32, 550);
+            
+            // glitter GUI
+            var glitterFill = gui.create(0, 0, "glitterFill");
+            var glitterBar = gui.create(0, 0, "glitterBar");
+            glitterFill.anchor.setTo(1, 0);
+            glitterBar.anchor = glitterFill.anchor;
+            glitterFill.fixedToCamera = glitterBar.fixedToCamera = true;
+            glitterBar.cameraOffset.setTo(CanvasWidth - 25, 25);
+            glitterFill.cameraOffset = glitterBar.cameraOffset;
+            glitterFill.crop(new Phaser.Rectangle(0, 0, 300, 10));
             
             guiObjs.heightIndicator = heightIndicator;
+            guiObjs.glitterFill = glitterFill;
+            guiObjs.glitterFillCrop = glitterFill.cropRect;
         }
         
         function update() {
@@ -94,6 +124,9 @@
                 GameStarted = true;
                 player.body.velocity.y = -LaunchSpeed;
             }
+            
+            // Camera Movement
+            game.camera.focusOnXY(player.x, player.y - 200);
             
             // Player Movement
             if (keys.left.isDown) {
@@ -106,17 +139,58 @@
                 player.animations.play("walk");
             } else {
                 player.body.velocity.x = 0;
-                player.animations.stop();
-                player.frame = 0;
+                if (player.animations.currentAnim.name == "walk") {
+                    player.animations.stop();
+                    player.frame = 0;
+                }
             }
             
+            // Colisiones con fairy
+            fairyGroup.forEach(function(fairy) {
+                if(game.physics.arcade.collide(player, fairy)){
+                    player.body.velocity.y = Phaser.Math.min(2 * player.body.velocity.y, 0) - FairyBoost;
+                    // Hack feo pq la colision roba velocidad y no se como arreglarlo
+                    player.animations.stop();
+                    player.animations.play("jump");
+                    
+                    CurrentGlitterDuration += GlitterBoost;
+                    NoGlitter = false;
+                    
+                    fairy.destroy();
+                }
+            }, this);
+            
+            if (GameStarted) {
+                CurrentGlitterDuration -= game.time.elapsed;
+                
+                if (CurrentGlitterDuration <= 0) {
+                    CurrentGlitterDuration = 0;
+                    
+                    if (!NoGlitter) {
+                        player.body.gravity.y = WorldGravity * WorldGravityNerf;
+                        NoGlitter = true;
+                    }
+                } else {
+                    player.body.gravity.y = WorldGravity;
+                }
+            }
+            
+            /* GUI update */
             var currentHeight = player.y / WorldHeight;
-            guiObjs.heightIndicator.cameraOffset.y = currentHeight * 500;
+            guiObjs.heightIndicator.cameraOffset.y = currentHeight * 500 + 40;
+            
+            if (!NoGlitter) {
+                var glitterProportion = CurrentGlitterDuration / GlitterDuration;
+                guiObjs.glitterFillCrop.width = 300 * glitterProportion;
+                guiObjs.glitterFill.updateCrop();
+            }
         }
         
         function render () {
-            game.debug.cameraInfo(game.camera, 32, 32);
-            //game.debug.spriteCoords(fairy, 62, 300);
+            //game.debug.cameraInfo(game.camera, 32, 32);
+            //game.debug.body(player);
+            //game.debug.body(fairy);
+            game.debug.bodyInfo(player, 32, 600);
         }
     };
 
