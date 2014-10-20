@@ -2,73 +2,121 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>hello phaser!</title>
-        <script src="scripts/phaser.js"></script>
+        <title>RabbitParty - Sky launcher</title>
+        <script src="scripts/external/phaser.js"></script>
+        <script src="scripts/assists.js"></script>
+        <!-- Game objects -->
     </head>
     <body>
 
     <script type="text/javascript">
 
     window.onload = function() {
+        var CanvasHeight = 600;
+        var CanvasWidth = 800;
 
-        var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
+        var game = new Phaser.Game(CanvasWidth, CanvasHeight, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
         
-        var ground, player, fairies, keys;
+        // Game Variables
+        var RabbitMovementSpeed = 40;
+        var WorldGravity = 20;
+        var LaunchSpeed = 500;
+        var GameStarted = false;
+        var BackgroundColor = 0x87ceeb;
+        var WorldHeight = 8192 + 600;
+        
+        var ground, player, fairy, keys;
+
+        var guiObjs = {};
 
         function preload (){
+            game.load.image('sky', 'assets/sky.jpg');
             game.load.spritesheet('rabbit', 'assets/rabbit.png', 185, 160);
-            game.load.spritesheet('butterflies', 'assets/butterflies.png', 32, 32)
-            game.load.image('sky', 'assets/sky.png');
+            game.load.spritesheet('butterflies', 'assets/butterflies.png', 32, 32);
             game.load.image('platform', 'assets/platform.png');
+            game.load.image('heightBar', 'assets/progress_marker.png');
         }
 
         function create (){
+            /* Set up engine */
             game.physics.startSystem(Phaser.Physics.ARCADE);
+            game.world.setBounds(0, 0, CanvasWidth, WorldHeight);
+            keys = game.input.keyboard.createCursorKeys();
+            
+            /* Background */
+            game.stage.backgroundColor = BackgroundColor;
             game.add.sprite(0, 0, 'sky');
             
+            /* Ground */
             ground = game.add.sprite(0, game.world.height - 32, 'platform');
             ground.scale.setTo(2, 1);
             game.physics.arcade.enable(ground);
             ground.body.immovable = true;
         
+            /* Player */
             player = game.add.sprite(game.world.centerX, game.world.height - 120, 'rabbit');
             player.scale.setTo(0.5, 0.5);
+            player.anchor.setTo(.5, 1);
             game.physics.arcade.enable(player);
-            player.body.gravity.y = 10;
+            player.body.gravity.y = WorldGravity;
             player.body.collideWorldBounds = true;
             
             player.animations.add('walk', [1, 2, 3], 12, true);
             player.animations.add('jump', [4, 5, 6, 7], 16, true);
             
-            fairies = game.add.group();
-            fairies.enableBody = true;
+            game.camera.follow(player);
             
-            keys = game.input.keyboard.createCursorKeys();
+            /* Fairies */
+            fairies_group = game.add.group();
+            fairy = Launcher.CreateFairy(game);
+            
+            /* GUI */
+            var gui = game.add.group();
+            var heightBar = game.add.sprite(0, 0, 'heightBar');
+            var heightIndicator = game.add.sprite(0, 0, "rabbit");
+            heightBar.anchor.setTo(0.5, 0);
+            heightIndicator.anchor.setTo(0.5);
+            heightIndicator.scale.setTo(0.25);
+            gui.add(heightBar);
+            gui.add(heightIndicator);
+            heightIndicator.fixedToCamera = heightBar.fixedToCamera = true;
+            heightBar.cameraOffset.setTo(32, 25);
+            heightIndicator.cameraOffset.setTo(32, 525);
+            
+            guiObjs.heightIndicator = heightIndicator;
         }
-
+        
         function update() {
             game.physics.arcade.collide(player, ground);
             
+            // GameStart
+            if (keys.up.isDown && !GameStarted){
+                GameStarted = true;
+                player.body.velocity.y = -LaunchSpeed;
+            }
+            
+            // Player Movement
             if (keys.left.isDown) {
-                player.body.velocity.x = -100;
+                player.body.velocity.x = -RabbitMovementSpeed;
                 player.scale.x = -0.5;
-                
                 player.animations.play("walk");
             } else if (keys.right.isDown) {
-                player.body.velocity.x = 100;
+                player.body.velocity.x = RabbitMovementSpeed;
                 player.scale.x = 0.5;
-                
                 player.animations.play("walk");
             } else {
                 player.body.velocity.x = 0;
-                
                 player.animations.stop();
                 player.frame = 0;
             }
+            
+            var currentHeight = player.y / WorldHeight;
+            guiObjs.heightIndicator.cameraOffset.y = currentHeight * 500;
         }
         
         function render () {
-           game.debug.body(player);
+            game.debug.cameraInfo(game.camera, 32, 32);
+            //game.debug.spriteCoords(fairy, 62, 300);
         }
     };
 
