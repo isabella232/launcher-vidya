@@ -1,4 +1,4 @@
-var Launcher = {
+Launcher.Assists = {
     CreateFairy: function(game, altura, fairyGroup) {
 
         /* X Position random */
